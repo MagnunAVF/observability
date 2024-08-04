@@ -1,0 +1,16 @@
+{
+  "name": "bff",
+  "version": "1.0.0",
+  "description": "BFF API to save new orders",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "Magnun A V F",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
