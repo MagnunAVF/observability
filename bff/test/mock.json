@@ -1,0 +1,9 @@
+{
+  "customerId": "ae321717-fcb3-447e-ad50-abcf00a54947",
+  "total": 133.21,
+  "items": [
+    { "id": "4d367e0a-6a35-470f-9350-16036422eb90", "quantity": 1 },
+    { "id": "f3a0eaab-7e1c-4524-90ec-73410cb5a9bf", "quantity": 2 },
+    { "id": "80c39711-7e59-449f-a2d6-06fe89c1d7b7", "quantity": 1 }
+  ]
+}

@@ -1,7 +1,9 @@
 const express = require("express");
-const app = express();
+const { OrderScheme, CreateOrderScheme } = require("./order");
 
 require("dotenv").config();
+
+const app = express();
 
 const PORT = process.env.PORT || 3000;
 
@@ -14,9 +16,18 @@ app.get("/health", (req, res) => {
 
 // Create orders route
 app.post("/orders", async (req, res) => {
-  const orderData = req.body;
+  const { body } = req;
 
-  res.status(201).json({ message: "Order received and queued", orderData });
+  const orderData = CreateOrderScheme.safeParse(body);
+
+  const { success, error, data } = orderData;
+  if (!success) {
+    return res.status(400).json({ message: "Error creating order.", error });
+  } else {
+    console.log(orderData);
+
+    res.status(201).json({ message: "Order received and queued", order: data });
+  }
 });
 
 app.listen(PORT, () => {
