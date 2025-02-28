@@ -2,6 +2,13 @@
 
 API to save todo tasks.
 
+## Setup
+
+```shell
+cp .env.sample .env
+npm install
+```
+
 ## Testing
 
 Create new todo:
