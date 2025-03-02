@@ -2,95 +2,115 @@ const express = require("express");
 
 require("dotenv").config();
 
+const db = require("./db");
+const todosDb = require("./db/todos");
+
 const app = express();
 
 app.use(express.json());
 
-let todos = [];
-let currentId = 1;
+app.get("/health", async (_req, res) => {
+  try {
+    await db.checkDbHealth();
 
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    message: "Service is healthy",
-    timestamp: new Date().toISOString(),
-  });
+    res.status(200).json({
+      status: "OK",
+      message: "Service and database are healthy",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      status: "DOWN",
+    });
+  }
 });
 
-app.post("/todos", (req, res) => {
+app.post("/todos", async (req, res) => {
   const { title, description } = req.body;
 
-  if (!title) {
-    return res.status(400).json({ error: "Title is required" });
+  if (!title || !description) {
+    return res.status(400).json({
+      error: "Both title and description are required",
+    });
   }
 
-  if (!description) {
-    return res.status(400).json({ error: "Description is required" });
+  try {
+    const result = await todosDb.createTodo(title, description);
+    res.status(201).json(result);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ msg: "Internal Server Error" });
   }
-
-  const currentTime = new Date().toISOString();
-  const newTodo = {
-    id: currentId++,
-    title,
-    description,
-    completed: false,
-    createdAt: currentTime,
-    updatedAt: currentTime,
-  };
-
-  todos.push(newTodo);
-
-  res.status(201).json(newTodo);
 });
 
-app.get("/todos", (req, res) => {
-  res.json(todos);
+app.get("/todos", async (_req, res) => {
+  try {
+    const result = await todosDb.getTodos();
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ msg: "Internal Server Error" });
+  }
 });
 
-app.get("/todos/:id", (req, res) => {
-  const todo = todos.find((t) => t.id === parseInt(req.params.id));
+app.get("/todos/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await todosDb.getTodoById(id);
 
-  if (!todo) {
-    return res.status(404).json({ error: "Todo not found" });
+    if (!result) {
+      return res.status(404).json({ error: "Todo not found" });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ msg: "Internal Server Error" });
   }
-
-  res.json(todo);
 });
 
-app.put("/todos/:id", (req, res) => {
-  const todoIndex = todos.findIndex((t) => t.id === parseInt(req.params.id));
+app.put("/todos/:id", async (req, res) => {
+  const { title, description, completed } = req.body;
 
-  if (todoIndex === -1) {
-    return res.status(404).json({ error: "Todo not found" });
+  try {
+    const result = await todosDb.updateTodoById(
+      req.params.id,
+      title,
+      description,
+      completed
+    );
+
+    if (!result) {
+      return res.status(404).json({ error: "Todo not found" });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ msg: "Internal Server Error" });
   }
-
-  const existingTodo = todos[todoIndex];
-  const updatedTodo = {
-    ...existingTodo,
-    title: req.body.title || existingTodo.title,
-    description: req.body.description || existingTodo.description,
-    completed:
-      req.body.completed !== undefined
-        ? req.body.completed
-        : existingTodo.completed,
-    updatedAt: new Date().toISOString(),
-  };
-
-  todos[todoIndex] = updatedTodo;
-
-  res.json(updatedTodo);
 });
 
-app.delete("/todos/:id", (req, res) => {
-  const todoIndex = todos.findIndex((t) => t.id === parseInt(req.params.id));
+app.delete("/todos/:id", async (req, res) => {
+  try {
+    const result = await todosDb.deteleTodoById(req.params.id);
 
-  if (todoIndex === -1) {
-    return res.status(404).json({ error: "Todo not found" });
+    if (!result) {
+      return res.status(404).json({ error: "Todo not found" });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ msg: "Internal Server Error" });
   }
-
-  todos.splice(todoIndex, 1);
-
-  res.status(204).send();
 });
 
 const PORT = process.env.PORT || 3000;
